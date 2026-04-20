@@ -259,7 +259,6 @@ app.post("/register", async (req, res) => {
 
     users.push({ email, passwordHash: hash });
     return res.status(201).json({ message: "User registered!" });
-    
   } catch (error) {
     return res.status(500).json({ error: "Server error during registration" });
   }
@@ -270,6 +269,27 @@ app.post("/register", async (req, res) => {
 // =========================
 app.post("/login", async (req, res) => {
   // Implement logic here based on the TODO 2.
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+    const user = users.find((u) => u.email === email);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Wrong password" });
+    }
+
+    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
+
+    return res.json({ token });
+  } catch (error) {
+    return res.status(500).json({ error: "Server error during login" });
+  }
 });
 
 // =========================
