@@ -245,6 +245,24 @@ app.get("/", (_req, res) => {
 // =========================
 app.post("/register", async (req, res) => {
   // Implement logic here based on the TODO 1.
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+    const existingUser = users.find((u) => u.email === email);
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    users.push({ email, passwordHash: hash });
+    return res.status(201).json({ message: "User registered!" });
+    
+  } catch (error) {
+    return res.status(500).json({ error: "Server error during registration" });
+  }
 });
 
 // =========================
@@ -264,5 +282,5 @@ app.get("/weather", async (req, res) => {
 
 // Start server
 app.listen(PORT, () =>
-  console.log(`Server running at http://localhost:${PORT}`)
+  console.log(`Server running at http://localhost:${PORT}`),
 );
